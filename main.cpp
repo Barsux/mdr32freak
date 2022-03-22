@@ -4,6 +4,7 @@
 #pragma argsused
 
 #ifdef __MDR32F9Qx__
+
 void cpu_init()
 {
 	RST_CLK_PCLKcmd (RST_CLK_PCLK_BKP, ENABLE);

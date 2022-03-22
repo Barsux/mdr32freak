@@ -1,39 +1,11 @@
 #include "uart.h"
 
 
-static uint8_t ReciveByte=0x00;
-volatile uint8_t rx_buff[256];
-volatile uint8_t rx_nbuff = 0;
-volatile bool rx_buff_full = false;
-volatile bool rx_buff_crlf = false;
-
-void flush_buff()
-{
-	rx_buff_full = false;
-	rx_buff_crlf = false;
-	rx_nbuff = 0;
-	memset((void*)rx_buff, 0, 256);
-}
-
-extern "C" void UART1_IRQHandler(void)
-{
-	if (MDR_UART1->MIS & UART_IT_RX)
-	{
-		rx_buff[rx_nbuff] = UART_ReceiveData(MDR_UART1);
-		MDR_UART1->ICR |= UART_IT_RX;
-		if(rx_buff[rx_nbuff] == 0x0D)rx_buff_crlf = true;
-		rx_nbuff++;
-		if(rx_nbuff > 256)rx_buff_full=true;
-	}
-}
-
-
-
 void uart_init(){
-	flush_buff();
+	//Creating PORT AND UART init structs
 	PORT_InitTypeDef uart_port;
 	UART_InitTypeDef uart_init;
-	
+	//Enabling clocking on PORTC
 	RST_CLK_PCLKcmd(RST_CLK_PCLK_PORTC, ENABLE);
 	uart_port.PORT_Pin = PORT_Pin_3;
 	uart_port.PORT_OE = PORT_OE_OUT;
@@ -53,7 +25,8 @@ void uart_init(){
 	
 	PORT_Init(MDR_PORTC, &uart_port);
 	
-	NVIC_EnableIRQ(UART1_IRQn);
+	//NVIC_EnableIRQ(UART1_IRQn);
+	
 	RST_CLK_PCLKcmd(RST_CLK_PCLK_UART1, ENABLE);
 	UART_BRGInit(MDR_UART1, UART_HCLKdiv1);
 	uart_init.UART_BaudRate = 115200;
@@ -65,33 +38,16 @@ void uart_init(){
 	
 	
 	UART_Init(MDR_UART1, &uart_init);
-	UART_ITConfig(MDR_UART1, UART_IT_RX, ENABLE);	
-	UART_Cmd(MDR_UART1, ENABLE);
+	//UART_ITConfig(MDR_UART1, UART_IT_RX, ENABLE);	
+	UART_Cmd(MDR_UART1, ENABLE);	
 	
 }
-
-
 void sendchar(uint8_t c)
-{                    
+{
     while (MDR_UART1->FR & UART_FLAG_TXFF);
-		MDR_UART1->DR = c;
+		MDR_UART1->DR = (uint8_t)c;
 }
 
-void uart_evaluate(){
-	if(rx_buff_full && !rx_buff_crlf){
-		flush_buff();
-		return;
-	}
-	//Now we just need to try printout that;
-	if(rx_buff_crlf){
-		char p[rx_nbuff];
-		memset(p, 0, rx_nbuff);
-		for(int i = 0; i < rx_nbuff; i++) p[i] = (char)rx_buff[i];
-		PRINT(p);
-		flush_buff();
-	}
-}
-    
 
 int sendstr(char * fmt, ...){
 	char buff[2048];
@@ -104,3 +60,4 @@ int sendstr(char * fmt, ...){
 	sendchar('\r');
 	return n;
 }
+

@@ -33,11 +33,13 @@ class CoreObject: public WaitSystem::Module, public Core {public:
       timer.clear();
       enable_wait(l2_transport_tx);
     }
+		/*
 		if(counter == 65535) {
 			PRINT("RUNNING");
 			MDR_PORTD->RXTX ^= (1<<8);
 		}
 		counter++;
+		*/
 		/*
 		else
     if (queue==l2_transport_rx) {

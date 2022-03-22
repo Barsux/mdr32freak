@@ -3,29 +3,38 @@
 
 #include "base.h"
 #include "uart.h"
-/*
-Инициализация таймера
-*/
+
+//Инициализация таймера
 void time_init();
 
-/*
-Проверка на переполнение таймера
-*/
+//Присвоение внутреннему счётчику старшего и младшего разрядов нового значения, на основе заданного времени в наносекундах
+void set_utc();
+
+//Проверка на переполнение таймера
 void check_overloading();
 
 
+/* 
+При инициализации объекта данного класса, в нём сохраняется старшее и младшее 32-битовое значение времени в машинных тактах, которым,
+с помощью данного класса далее можно манипулировать, сравнивать, вычитать, преобразовывать в наносекунды
+*/
 class TsNs{
 	public:
 		TsNs();
 		uint32_t high, low;
+	
+		//Записывает в объект класса новое значение времени в машинных тактах
 		void renew();
-		uint64_t toutc();
-		uint64_t operator - (TsNs ts2);
-		uint64_t operator + (TsNs ts2);
-		bool operator == (TsNs ts2);
-		bool operator != (TsNs ts2);
-		bool operator > (TsNs ts2);
-		bool operator < (TsNs ts2);
+		//Возвращает преобразованное время в наносекундах, ранее сохранённое в объекте
+		uint64_t toUTC();
+		//Возвращает преобразованное время в виде 64-битного числа в машинных тактах
+		uint64_t toU64();
+		uint64_t 	operator 	- 	(TsNs ts2);
+		uint64_t 	operator 	+ 	(TsNs ts2);
+		bool 			operator 	== 	(TsNs ts2);
+		bool 			operator 	!= 	(TsNs ts2);
+		bool 			operator 	> 	(TsNs ts2);
+		bool 			operator 	< 	(TsNs ts2);
 };
 
 #endif 

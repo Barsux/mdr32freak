@@ -1,16 +1,11 @@
-#ifndef UARTH
-#define UARTH
+#ifndef UARTCOREH
+#define UARTCOREH
 #define PRINT(...) sendstr(__VA_ARGS__)
+#include "base.h"
 
 void uart_init();
 void uart_evaluate();
 int sendstr(char * fmt, ...);
-#endif
-
-#ifndef l2_transportH
-#define l2_transportH
-
-#include "base.h"
 
 class UART {public:
   virtual ~UART() {}

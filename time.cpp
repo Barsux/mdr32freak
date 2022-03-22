@@ -1,5 +1,4 @@
 #include "time.h"
-#define print(...) sendstr(__VA_ARGS__)
 U32 global_high = 0;
 U32 cntstamp = 0;
 
@@ -56,7 +55,8 @@ U64 TsNs::toutc(){
 }
 
 U64 TsNs::operator - (TsNs ts2){
-	return (((U64)(this->high - ts2.high)<<32)|((U64)(this->low - ts2.low))) * 1000000000 / SystemCoreClock;
+	U64 time = ((uint64_t)(this->high - ts2.high) << 32) + this->low - ts2.low;
+	return time * 1000000000 / SystemCoreClock;
 }
 		
 U64 TsNs::operator + (TsNs ts2){
