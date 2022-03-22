@@ -43,6 +43,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "uart.h"
+#include "time.h"
 #else
 #include "windows.h"
 #include "mem.h"

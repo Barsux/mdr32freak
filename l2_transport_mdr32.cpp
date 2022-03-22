@@ -9,7 +9,7 @@ public:
     L2Transport_mdr32 &base;
     Rx(L2Transport_mdr32 &base): base(base) {
     }
-      int recv(void * dst, U64 &utc_rx , int maxsize) {
+      int recv(void * dst, TsNs &utc_rx , int maxsize) {
     }
   } queue_rx;
   class Tx: public Queue_tx {public:
@@ -29,6 +29,14 @@ public:
     tx = &queue_tx; enable_wait(tx);
     flags |= evaluate_every_cycle;
   }
+	
+	int recv(void * dst, TsNs &utc_rx, int maxsize){
+		erecv((U32 * )dst);
+	}
+	
+	int send(void * buffer, int seq, int size){
+		esend((U8 *) buffer);
+	}
 
 L2Transport* new_L2Transport(WaitSystem* waitSystem, L2Transport::Setup &setup) {
   return new L2Transport_mdr32(waitSystem, setup);

@@ -61,6 +61,7 @@ public:
   UART_MDR32(WaitSystem* waitSystem): WaitSystem::Module(waitSystem)
 		,init(false),queue_rx(*this), queue_tx(*this)
   {
+		type = (Types)uarttype;
     module_debug = "UART";
     rx 		= &queue_rx; 	memset(rx->rxbuf, 0, 256); 	rx->rxlen = 0;
     tx 		= &queue_tx; 	enable_wait(tx); 						tx->txbuf = 0;
