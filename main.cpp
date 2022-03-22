@@ -35,6 +35,8 @@ void init(){
 #else
 void init(){}
 #endif
+
+
 int main()
 {
 	init();

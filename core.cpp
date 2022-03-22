@@ -11,19 +11,10 @@ class CoreObject: public WaitSystem::Module, public Core {public:
     , setup(setup), l2_transport_rx(), l2_transport_tx()
   {
     module_debug = "CORE";
+		type = (Types)systtype;
 		flags = (Flags)(flags | evaluate_every_cycle);
   }
   WaitSystem::Queue timer;
-	/*
-  void attach_l2_transport(L2Transport::Queue_rx* rx, L2Transport::Queue_tx* tx, L2Transport::Queue_sent* sent) {
-    disable_wait(l2_transport_rx); disable_wait(l2_transport_tx); disable_wait(l2_transport_sent);
-    l2_transport_rx = rx; l2_transport_tx = tx; l2_transport_sent = sent;
-    enable_wait(l2_transport_rx);
-    enable_wait(l2_transport_sent);
-    //waitSystem->enable_wait(this, &timer);
-    //waitSystem->start_timer(&timer, 500000000ULL);
-  }
-	*/
 
   void evaluate() {
 		
@@ -33,13 +24,6 @@ class CoreObject: public WaitSystem::Module, public Core {public:
       timer.clear();
       enable_wait(l2_transport_tx);
     }
-		/*
-		if(counter == 65535) {
-			PRINT("RUNNING");
-			MDR_PORTD->RXTX ^= (1<<8);
-		}
-		counter++;
-		*/
 		/*
 		else
     if (queue==l2_transport_rx) {

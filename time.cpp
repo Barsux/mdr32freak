@@ -50,8 +50,12 @@ void TsNs::renew(){
 	low = MDR_TIMER1->CNT;
 }
 
-U64 TsNs::toutc(){
+U64 TsNs::toUTC(){
 	return (((uint64_t)high << 32) | ((uint64_t)low)) * 1000000000 / SystemCoreClock;
+}
+
+U64 TsNs::toU64(){
+	return ((uint64_t)high << 32) | ((uint64_t)low);
 }
 
 U64 TsNs::operator - (TsNs ts2){

@@ -132,6 +132,12 @@ class WaitSystem {public:
       evaluate_once_needed = 0x01,
       evaluate_every_cycle = 0x02,
     } flags;
+		enum Types {
+			systtype 				= 0x01,
+			packettype 			= 0x02,
+			l2transporttype = 0x03,
+			uarttype 				= 0x04,
+		} type;
     WaitSystem* waitSystem;
     char* module_debug;
     Module(WaitSystem* waitSystem): waitSystem(waitSystem), readyQueues(), nReadyQueues()

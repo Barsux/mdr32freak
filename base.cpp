@@ -162,27 +162,17 @@ U64 nanotime() {
   timespec ts; clock_gettime(CLOCK_REALTIME, &ts);
   return U64(ts.tv_sec)*1000000000ULL + U64(ts.tv_nsec);
 	#elif __MDR32F9Qx__
+	return 0;
   #else
   U64 time[2]; GetSystemTimeAsFileTime((FILETIME*)(&time[0]));
   return U64((time[0])*100ULL - 11644473600000000000ULL);
   #endif
-	return 0; //МОЗОЛИТ!!!!!
 }
-uint64_t steps = 0;
-uint8_t cnt = 0;
-extern "C" void SysTick_Handler(void){
-	if(cnt == 10){
-		cnt = 0;
-		PRINT("%llu", steps);
-		steps = 0;
-	}
-	cnt++;
-}
-
 
 class WaitSystemCore: public WaitSystem {
   Queue** queues; int nQueues;
   Module** modules; int nModules;
+	U8** types_to_run; int nTypes;
 public:
   WaitSystemCore(): queues(), nQueues(), modules(), nModules() {}
 
@@ -211,18 +201,13 @@ public:
   void stop_timer(Queue* queue) {
     queue->nsec_timerNext = 0; queue->nsec_timerInterval = 0;
   }
+	
 	bool init = false;
   void evaluate() {
-		if(!init){
-			SysTick->LOAD = 1440000000 - 1;
-			SysTick->CTRL |= (1<<2);
-			SysTick->CTRL |= (1<<1);
-			SysTick->CTRL |= (1<<0);
-			NVIC_EnableIRQ(SysTick_IRQn);
-		}
-		steps++;
     U64 ns = nanotime();
-
+		U16 ETH_STAT = MDR_ETHERNET1->ETH_STAT;
+		U16 RXTX_STAT = MDR_PORTD->RXTX;
+		//if(!ETH_STAT >> ETH_STAT_R_EMPTY_Pos & 1) arr_add(types_to_run, nTypes, 1);
     for (int i=0; i<nQueues; i++) {
       Queue* queue = queues[i];
       if (queue->nsec_timerInterval && (!queue->nsec_timerNext || queue->nsec_timerNext<=ns)) {
@@ -234,7 +219,6 @@ public:
         arr_add_to_set(module->readyQueues, module->nReadyQueues, queue);
       }
     }
-    // 2. ????? ???????????? ???????
     int i = 0; while (i<nModules) {
       Module* module = modules[i];
       if (
