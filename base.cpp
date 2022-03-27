@@ -162,7 +162,7 @@ U64 nanotime() {
   timespec ts; clock_gettime(CLOCK_REALTIME, &ts);
   return U64(ts.tv_sec)*1000000000ULL + U64(ts.tv_nsec);
 	#elif __MDR32F9Qx__
-	return 0;
+	return TsNs().toU64();
   #else
   U64 time[2]; GetSystemTimeAsFileTime((FILETIME*)(&time[0]));
   return U64((time[0])*100ULL - 11644473600000000000ULL);
@@ -175,7 +175,6 @@ class WaitSystemCore: public WaitSystem {
 	U8** types_to_run; int nTypes;
 public:
   WaitSystemCore(): queues(), nQueues(), modules(), nModules() {}
-
   void enable_wait(Module* module, Queue* queue) {
     arr_add_to_set(queues, nQueues, queue);
     arr_add_to_set(queue->listeners, queue->nListeners, module);
@@ -202,12 +201,10 @@ public:
     queue->nsec_timerNext = 0; queue->nsec_timerInterval = 0;
   }
 	
+	void check();
 	bool init = false;
   void evaluate() {
     U64 ns = nanotime();
-		U16 ETH_STAT = MDR_ETHERNET1->ETH_STAT;
-		U16 RXTX_STAT = MDR_PORTD->RXTX;
-		//if(!ETH_STAT >> ETH_STAT_R_EMPTY_Pos & 1) arr_add(types_to_run, nTypes, 1);
     for (int i=0; i<nQueues; i++) {
       Queue* queue = queues[i];
       if (queue->nsec_timerInterval && (!queue->nsec_timerNext || queue->nsec_timerNext<=ns)) {
@@ -226,6 +223,7 @@ public:
         (module->flags & Module::evaluate_once_needed) ||
         (module->flags & Module::evaluate_every_cycle)
       )
+			if(module->awaited)module->check();
       {
 				module->flags = (Module::Flags)(module->flags & ~Module::evaluate_once_needed);
         module->evaluate();

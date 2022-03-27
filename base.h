@@ -129,16 +129,11 @@ class WaitSystem {public:
     friend WaitSystemCore;
     Queue** readyQueues; int nReadyQueues;
   public:
+		bool awaited = false;
     enum Flags {
       evaluate_once_needed = 0x01,
       evaluate_every_cycle = 0x02,
     } flags;
-		enum Types {
-			systtype 				= 0x01,
-			packettype 			= 0x02,
-			l2transporttype = 0x03,
-			uarttype 				= 0x04,
-		} type;
     WaitSystem* waitSystem;
     char* module_debug;
     Module(WaitSystem* waitSystem): waitSystem(waitSystem), readyQueues(), nReadyQueues()
@@ -151,6 +146,7 @@ class WaitSystem {public:
     }
     virtual void evaluate() = 0;
     Queue* enum_ready_queues();
+		void check();
     void print(char* fmt, ...);
     void enable_wait(Queue* queue) {waitSystem->enable_wait(this, queue);}
     void disable_wait(Queue* queue) {waitSystem->disable_wait(this, queue);}

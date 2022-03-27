@@ -10,14 +10,13 @@ class L2Transport {public:
     Setup(): physicalId() {}
   };
   class Queue_rx: public WaitSystem::Queue {public:
-    virtual int recv(U64 &utc_rx, void* dst, int cbDstMax) = 0;
+    virtual int recv(void * dst, TsNs &utc_rx , int maxsize) = 0;
   }* rx;
   class Queue_tx: public WaitSystem::Queue {public:
-    virtual int send(void* src, int cbSrc) = 0;
+    virtual int send(U8 * buffer, int seq, int size) = 0;
   }* tx;
   class Queue_sent: public WaitSystem::Queue {public:
-    U64 utc_sent;
+    TsNs utc_sent;
   }* sent;
 };
-
 #endif

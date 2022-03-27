@@ -11,38 +11,6 @@ U8 rx_nbuff = 0;
 U8 tx_nbuff = 0;
 U8 tx_pointer = 0;
 
-//IRQ
-extern "C" void UART1_IRQHandler(void)
-{
-	if(MDR_UART1->MIS & UART_IT_TX){
-		if(tx_pointer != tx_nbuff){
-			MDR_UART1->DR = tx_buff[tx_pointer];
-			tx_pointer++;
-		}
-		else{
-			memset(tx_buff, 0, tx_nbuff);
-			tx_pointer = 0;
-		}
-		MDR_UART1->ICR |= UART_IT_TX;
-	}
-}
-
-extern "C" void UART2_IRQHandler(void)
-{
-	if (MDR_UART2->MIS & UART_IT_RX)
-	{
-		U8 data = MDR_UART2->DR;
-		if(data == 0x0D) {
-			rxready = true;
-			return;
-		}
-		tx_buff[tx_nbuff] = data;
-		tx_nbuff++;
-		MDR_UART2->ICR |= UART_IT_RX;
-	}
-}
-
-//ENDIRQ
 
 class UART_MDR32: public WaitSystem::Module, public UART {
 public:
@@ -61,7 +29,6 @@ public:
   UART_MDR32(WaitSystem* waitSystem): WaitSystem::Module(waitSystem)
 		,init(false),queue_rx(*this), queue_tx(*this)
   {
-		type = (Types)uarttype;
     module_debug = "UART";
     rx 		= &queue_rx; 	memset(rx->rxbuf, 0, 256); 	rx->rxlen = 0;
     tx 		= &queue_tx; 	enable_wait(tx); 						tx->txbuf = 0;
@@ -130,7 +97,10 @@ public:
 		UART_Cmd(MDR_UART1, ENABLE);
 	
 	}
-	
+	void check(){
+		UART_GetFlagStatus (MDR_UART2, UART_FLAG_RXFE);
+		if(MDR_UART1->FR & UART_FLAG_RXFF)rx->setReady();
+	}
   void evaluate() { 
     if(!init)uart_init();
   }

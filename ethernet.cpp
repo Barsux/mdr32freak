@@ -3,7 +3,6 @@
 #define U16SWAP(digit) ((digit << 8)| (digit >> 8))
 
 int eth_init(MAC &srcMAC){
-	//PRINT("ETH INIT");
 	ETH_ClockDeInit();
 	ETH_PHY_ClockConfig(ETH_PHY_CLOCK_SOURCE_HSE2, ETH_PHY_HCLKdiv1);
 	RST_CLK_PCLKcmd(RST_CLK_PCLK_DMA, ENABLE); // Dma here now, idk.
@@ -40,31 +39,16 @@ int eth_init(MAC &srcMAC){
 	return 1;
 }
 
-void debug_eval(MDR_ETHERNET_TypeDef * ETHERNETx){
-	uint32_t InputFrame[1514/4];
-	uint16_t status_reg;
-	ETH_StatusPacketReceptionTypeDef ETH_StatusPacketReceptionStruct;
-	status_reg = ETHERNETx->ETH_IFR;
+void sendto(U32 * packet, U32 * size){
+	ETH_SendFrame(MDR_ETHERNET1, packet, *(U32*)&packet[0]);
+}
 
-	if(ETHERNETx->ETH_R_Head != ETHERNETx->ETH_R_Tail){
-	/*if(status_reg & ETH_MAC_IT_RF_OK ){*/
-		ETH_StatusPacketReceptionStruct.Status = ETH_ReceivedFrame(ETHERNETx, InputFrame);
-		PRINT("Accept packet with size=%u", ETHERNETx->ETH_R_Tail);
+U16 recvto(U32 * packet, TsNs &UTC_Recv){
+	volatile ETH_StatusPacketReceptionTypeDef ETH_StatusPacketReceptionStruct;
+	if(MDR_ETHERNET1->ETH_R_Head != MDR_ETHERNET1->ETH_R_Tail) {
+		UTC_Recv.renew();
+		ETH_StatusPacketReceptionStruct.Status = ETH_ReceivedFrame(MDR_ETHERNET1, packet);
+		return (U16)(MDR_ETHERNET1->ETH_R_Head - MDR_ETHERNET1->ETH_R_Tail);
 	}
-}
-
-void send_packet(U8 * packet, U32 * size){
-	
-}
-void create_packet(MAC src, MAC dst){
-	U8 packet[1000];
-	memset(packet, 0, 1000);
-	*(uint32_t *)&packet[0] = sizeof(ethheader);
-	struct ethheader *eth = (struct ethheader *)(packet + 4);
-	memcpy(eth->h_source, src, 6);
-	memcpy(eth->h_dest, dst, 6);
-	eth->h_proto = U16SWAP(0x0800);
-	PRINT("Sending...");
-	ETH_SendFrame(MDR_ETHERNET1, (uint32_t *) packet, *(uint32_t*)&packet[0]);
-	PRINT("Sended!");
+	return 0; 
 }
