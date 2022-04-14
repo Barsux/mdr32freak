@@ -1,5 +1,8 @@
 #include "base.h"
 #include "core.h"
+#include "l2_transport_mdr32.h"
+#include "packetizer_mdr32.h"
+
 
 #pragma argsused
 
@@ -40,14 +43,23 @@ void init(){}
 int main()
 {
 	init();
-  WaitSystem* waitSystem = new_WaitSystem();
+	PRINT("INIT");
+	WaitSystem* waitSystem = new_WaitSystem();
+
   Core::Setup coreSetup;
   Core* core = new_Core(waitSystem, coreSetup);
+  L2Transport::Setup l2Transport_setup;
+  l2Transport_setup.srcMAC = "43:A8:A7:B4:13:42";
+  L2Transport* l2Transport = new_L2Transport(waitSystem, l2Transport_setup);
 
-  //L2Transport::Setup l2Transport_setup;
-  //l2Transport_setup.physicalId = "eth0";
-  //L2Transport* l2Transport = new_L2Transport(waitSystem, l2Transport_setup);
-  //core->attach_l2_transport(l2Transport->rx, l2Transport->tx, l2Transport->sent);
+	Packetizer::Setup packetizer_setup;
+	packetizer_setup.ip4 = "192.168.1.12";
+  Packetizer* packetizer = new_Packetizer(waitSystem, packetizer_setup);
+  packetizer->attach_l2_transport(l2Transport->rx, l2Transport->tx, l2Transport->sent);
+ 
+  core->attach_packetizer(packetizer->rx, packetizer->tx, packetizer->sent);
+
+
   waitSystem->run();
 }
 

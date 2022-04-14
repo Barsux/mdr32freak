@@ -3,6 +3,7 @@
 
 #include "packetizer.h"
 
+#define SPACER 4
 #pragma pack(push, 1)
 struct ethheader{
     U8 h_dest[6];

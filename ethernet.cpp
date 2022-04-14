@@ -1,6 +1,5 @@
 #include "ethernet.h"
 #define PRINT(...) sendstr(__VA_ARGS__)
-#define U16SWAP(digit) ((digit << 8)| (digit >> 8))
 
 int eth_init(MAC &srcMAC){
 	ETH_ClockDeInit();
@@ -37,16 +36,18 @@ int eth_init(MAC &srcMAC){
 	ETH_PHYCmd(MDR_ETHERNET1, ENABLE);
 	ETH_Start(MDR_ETHERNET1);
 	return 1;
+	PRINT("ETH INIT");
 }
 
 void sendto(U32 * packet, U32 * size){
 	ETH_SendFrame(MDR_ETHERNET1, packet, *(U32*)&packet[0]);
 }
 
-U16 recvto(U32 * packet, TsNs &UTC_Recv){
+U16 recvto(U32 * packet, TsNs * UTC_Recv){
+	PRINT("GETTING PACKET");
 	volatile ETH_StatusPacketReceptionTypeDef ETH_StatusPacketReceptionStruct;
 	if(MDR_ETHERNET1->ETH_R_Head != MDR_ETHERNET1->ETH_R_Tail) {
-		UTC_Recv.renew();
+		UTC_Recv->renew();
 		ETH_StatusPacketReceptionStruct.Status = ETH_ReceivedFrame(MDR_ETHERNET1, packet);
 		return (U16)(MDR_ETHERNET1->ETH_R_Head - MDR_ETHERNET1->ETH_R_Tail);
 	}

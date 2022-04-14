@@ -49,6 +49,11 @@
 #include "mem.h"
 #endif
 
+#define htons(digit) ((digit << 8)| (digit >> 8))
+#define ntohs(digit) ((digit >> 8)| (digit << 8))
+#define htonl(digit) ((digit << 16)| (digit >> 16))
+#define ntohl(digit) ((digit >> 16)| (digit << 16))
+
 typedef uint64_t U64;
 typedef uint32_t U32;
 typedef uint16_t U16;
@@ -144,9 +149,9 @@ class WaitSystem {public:
     virtual ~Module() {
       waitSystem->remove_module(this);
     }
+		virtual void check() = 0;
     virtual void evaluate() = 0;
     Queue* enum_ready_queues();
-		void check();
     void print(char* fmt, ...);
     void enable_wait(Queue* queue) {waitSystem->enable_wait(this, queue);}
     void disable_wait(Queue* queue) {waitSystem->disable_wait(this, queue);}
