@@ -5,8 +5,8 @@ class L2Transport_mdr32: public WaitSystem::Module, public L2Transport {
   L2Transport::Setup &setup;
 public:
   int sequence;
-	bool inited = false;
-	bool sended = false;
+	bool inited;
+	bool sended;
   class Rx: public Queue_rx {public:
     L2Transport_mdr32 &base;
     Rx(L2Transport_mdr32 &base): base(base) {
@@ -27,7 +27,7 @@ public:
   L2Transport_mdr32(WaitSystem* waitSystem, L2Transport::Setup &setup): WaitSystem::Module(waitSystem)
     , setup(setup), queue_rx(*this), queue_tx(*this)
   {
-		awaited = true;
+		awaited = true; inited = false; sended = false;
     module_debug = "ETH";
     rx = &queue_rx; sent = &queue_sent;
     tx = &queue_tx; enable_wait(tx);
@@ -35,6 +35,7 @@ public:
   }
 	
 	void init(){
+		inited = true;
 		MAC mac;
 		memset(mac, 0, 6);
 		str2mac(mac, setup.srcMAC);
@@ -51,15 +52,16 @@ public:
 		return 1;
 	}
 	void check(){
+		if(!inited)init();
 		volatile U16 STAT = MDR_ETHERNET1->ETH_STAT;
-		bool rempty = (bool((1 << 0)  &  STAT));
-		bool xempty = (bool((1 << 8)  &  STAT));
-		if((STAT >> 0) & 1u){
+		bool RX_EMPTY = (bool)((STAT >> 0) & 1);
+		bool TX_EMPTY = (bool)((STAT >> 8) & 1);
+		if(!RX_EMPTY){
+			RX_EMPTY = !RX_EMPTY;
 			rx->setReady();
-			PRINT("REMPTY");
 		}
-		if((STAT >> 8) & 1u){
-			PRINT("XEMPTY");
+		if(!TX_EMPTY){
+			TX_EMPTY = !TX_EMPTY;
 			if(sended){
 				sended = false;
 				sent->utc_sent = TsNs();
@@ -69,8 +71,7 @@ public:
 		}
 		
 	}
-	void evaluate(){
-		if(!inited)init();
+	void evaluate(){	
 	}
 };
 L2Transport* new_L2Transport(WaitSystem* waitSystem, L2Transport::Setup &setup) {

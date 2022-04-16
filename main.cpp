@@ -13,7 +13,7 @@ void cpu_init()
 	RST_CLK_PCLKcmd (RST_CLK_PCLK_BKP, ENABLE);
   RST_CLK_HSEconfig (RST_CLK_HSE_ON); 
   while (RST_CLK_HSEstatus () != SUCCESS);
-  RST_CLK_CPU_PLLconfig (RST_CLK_CPU_PLLsrcHSEdiv1, RST_CLK_CPU_PLLmul9); 
+  RST_CLK_CPU_PLLconfig (RST_CLK_CPU_PLLsrcHSEdiv1, RST_CLK_CPU_PLLmul13); 
   RST_CLK_CPU_PLLcmd (ENABLE); 
   while (RST_CLK_CPU_PLLstatus () != SUCCESS);
   RST_CLK_CPUclkPrescaler (RST_CLK_CPUclkDIV1); 
@@ -42,6 +42,8 @@ void init(){}
 
 int main()
 {
+	char source_mac[] = "43:A8:A7:B4:13:42";
+	char source_ip[] = "192.168.1.12";
 	init();
 	PRINT("INIT");
 	WaitSystem* waitSystem = new_WaitSystem();
@@ -49,11 +51,12 @@ int main()
   Core::Setup coreSetup;
   Core* core = new_Core(waitSystem, coreSetup);
   L2Transport::Setup l2Transport_setup;
-  l2Transport_setup.srcMAC = "43:A8:A7:B4:13:42";
+	memcpy(l2Transport_setup.srcMAC, source_mac, 17);
   L2Transport* l2Transport = new_L2Transport(waitSystem, l2Transport_setup);
 
 	Packetizer::Setup packetizer_setup;
-	packetizer_setup.ip4 = "192.168.1.12";
+	memcpy(packetizer_setup.srcMAC, source_mac, 17);
+	memcpy(packetizer_setup.ip4, source_ip, 12);
   Packetizer* packetizer = new_Packetizer(waitSystem, packetizer_setup);
   packetizer->attach_l2_transport(l2Transport->rx, l2Transport->tx, l2Transport->sent);
  

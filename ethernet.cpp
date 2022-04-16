@@ -2,6 +2,7 @@
 #define PRINT(...) sendstr(__VA_ARGS__)
 
 int eth_init(MAC &srcMAC){
+	PRINT("INIT2");
 	ETH_ClockDeInit();
 	ETH_PHY_ClockConfig(ETH_PHY_CLOCK_SOURCE_HSE2, ETH_PHY_HCLKdiv1);
 	RST_CLK_PCLKcmd(RST_CLK_PCLK_DMA, ENABLE); // Dma here now, idk.
@@ -49,6 +50,7 @@ U16 recvto(U32 * packet, TsNs * UTC_Recv){
 	if(MDR_ETHERNET1->ETH_R_Head != MDR_ETHERNET1->ETH_R_Tail) {
 		UTC_Recv->renew();
 		ETH_StatusPacketReceptionStruct.Status = ETH_ReceivedFrame(MDR_ETHERNET1, packet);
+		PRINT("ACCEPTED PACKET WITH SIZE %u", (U16)(MDR_ETHERNET1->ETH_R_Head - MDR_ETHERNET1->ETH_R_Tail)); 
 		return (U16)(MDR_ETHERNET1->ETH_R_Head - MDR_ETHERNET1->ETH_R_Tail);
 	}
 	return 0; 

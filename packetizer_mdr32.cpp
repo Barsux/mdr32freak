@@ -9,7 +9,9 @@ public:
     bool have_ready_packet;
     bool setted;
     bool have_values;
+		bool inited;
 		U32 ip4;
+		
     I4 total;
     L2Transport::Queue_rx*     l2_transport_rx;
     L2Transport::Queue_tx*     l2_transport_tx;
@@ -66,7 +68,7 @@ public:
 
 
     PacketizerObject(WaitSystem* waitSystem, Packetizer::Setup &setup): WaitSystem::Module(waitSystem)
-            , setup(setup), setted(false), have_values(false), prx(*this), ptx(*this), psent(*this)
+            , setup(setup), setted(false), inited(false), have_values(false), prx(*this), ptx(*this), psent(*this)
     {
 				awaited = false;
         module_debug = "PACKETIZER";
@@ -147,6 +149,7 @@ public:
 			
         struct ethheader *eth = (struct ethheader *)(buffer);
         if(eth->h_proto != ip_proto) return -1;
+				if(memcmp(eth->h_dest, packet.srcMAC, 6) != 0) return -1;
 			
         struct ipheader *ip = (struct ipheader *) (buffer + sizeof(struct ethheader));
         if(ip->protocol != IPPROTO_UDP || ip->daddr != ip4) return -1;
@@ -170,14 +173,24 @@ public:
 				return -1;
 }
    
+		void init(){
+			setted = true;
+			MAC mac;
+			memset(mac, 0, 6);
+			str2mac(packet.srcMAC, setup.srcMAC);
+			str2ip4(setup.ip4, packet.srcIP);
+			eth_init(mac);
+		}
 		void check(){}
 
     void evaluate(){
+				if(inited) init();
         while (WaitSystem::Queue* queue = enum_ready_queues()){
             if(queue == l2_transport_tx && setted){
                 tx->setReady();
             }
             else if(queue == l2_transport_rx && setted){
+								PRINT("RX_READY");
                 rx->setReady();
             }
             else if(queue == rx && !setted){
@@ -186,7 +199,8 @@ public:
                 setted = true;
             }
             else if(queue == tx){
-                enable_wait(l2_transport_tx);
+                //enable_wait(l2_transport_tx);
+							PRINT("TX WORKS!");
             }
             else if(queue == l2_transport_sent){
                 l2_transport_sent->clear();
@@ -195,7 +209,6 @@ public:
                 sent->setReady();
             }
         }
-
     }
 };
 Packetizer* new_Packetizer(WaitSystem* waitSystem, Packetizer::Setup &setup){

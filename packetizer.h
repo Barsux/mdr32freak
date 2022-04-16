@@ -11,7 +11,8 @@ class Packetizer{public:
     virtual ~Packetizer() {}
 		class Setup {public:
 			char* ip4;
-			Setup(): ip4() {}
+			char* srcMAC;
+			Setup(): ip4(), srcMAC() {}
 		};
     class Queue_prx: public WaitSystem::Queue {public:
         struct pckt packet;

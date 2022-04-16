@@ -19,15 +19,16 @@ class CoreObject: public WaitSystem::Module, public Core {public:
 	
 	void attach_packetizer(Packetizer::Queue_prx* rx, Packetizer::Queue_ptx* tx, Packetizer::Queue_psent* sent){
         disable_wait(packetizer_tx); disable_wait(packetizer_rx); disable_wait(packetizer_sent);
-        packetizer_tx = tx;
-        packetizer_rx = rx;
-        packetizer_sent = sent;
+        packetizer_tx = tx; enable_wait(packetizer_rx);
+        packetizer_rx = rx; enable_wait(packetizer_tx);
+        packetizer_sent = sent; enable_wait(packetizer_sent);
   }
 	
 	void init();
 	void check(){}
   void evaluate() {
 		while (WaitSystem::Queue* queue = enum_ready_queues()){
+		packetizer_tx->setReady();
 		if(queue == packetizer_tx) {
 								PRINT("PTX");
                 can_send = true;
