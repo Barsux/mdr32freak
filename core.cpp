@@ -42,9 +42,7 @@ class CoreObject: public WaitSystem::Module, public Core {public:
 				I2 r = packetizer_rx->recv(sequence, ts);
 				if(r > 0){
 					seq = sequence;
-					if(can_send){
-						packetizer_tx->send(sequence);
-					}
+					packetizer_tx->send(sequence);
 				}
 			}
 		}

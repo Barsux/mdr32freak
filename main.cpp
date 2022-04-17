@@ -63,12 +63,12 @@ int main()
 	Core::Setup coreSetup;
 	Core* core = new_Core(waitSystem, coreSetup);
 	L2Transport::Setup l2Transport_setup;
-	memcpy(l2Transport_setup.srcMAC, source_mac, 17);
+	l2Transport_setup.srcMAC = source_mac;
 	L2Transport* l2Transport = new_L2Transport(waitSystem, l2Transport_setup);
 
 	Packetizer::Setup packetizer_setup;
-	memcpy(packetizer_setup.srcMAC, source_mac, 17);
-	memcpy(packetizer_setup.ip4, source_ip, 12);
+	packetizer_setup.srcMAC = source_mac;
+	packetizer_setup.ip4 = source_ip;
 	Packetizer* packetizer = new_Packetizer(waitSystem, packetizer_setup);
 	packetizer->attach_l2_transport(l2Transport->rx, l2Transport->tx, l2Transport->sent);
  

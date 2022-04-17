@@ -93,7 +93,7 @@ void stdout_printf(char* fmt, ...);
 void print(char* fmt, ...);
 
 int str2int(int &dst, char * src);
-int str2ip4(const char * dst, IP4 ip);
+int str2ip4(const char * dst, IP4 &ip);
 int ip42str(char * dst, IP4 ip);
 int utc2str(char* dst, int cbDstMax, U64 utc);
 int mac2str(char* dst, MAC mac);

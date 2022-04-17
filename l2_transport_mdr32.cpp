@@ -19,20 +19,21 @@ public:
 		L2Transport_mdr32 &base;
 		Tx(L2Transport_mdr32 &base): base(base) {
     }
-		int send(U8 * buffer, int seq, U32 * size) {
-			return base.send(buffer, size);
+		int send(U32 * buffer) {
+			return base.send(buffer);
 		}
 	}queue_tx;
 	Queue_sent queue_sent;
+	
 	L2Transport_mdr32(WaitSystem* waitSystem, L2Transport::Setup &setup): WaitSystem::Module(waitSystem)
-	, inited(false), sended(false), setup(setup), queue_rx(*this), queue_tx(*this)
+		, inited(false), sended(false), setup(setup), queue_rx(*this), queue_tx(*this)
 	{
 		awaited = true;
 		module_debug = "ETH";
 		rx = &queue_rx; sent = &queue_sent;
 		tx = &queue_tx; enable_wait(tx);
 		flags = (Flags)(flags | evaluate_every_cycle);
-  }
+	}
 	
 	void inits(){
 		MAC mac;
@@ -46,14 +47,14 @@ public:
 		return recvto((U32*)dst, utc_rx);
 	}
 	
-	int send(void * buffer, U32 * size){
-		sendto((U32*)buffer, size);
+	int send(void * buffer){
+		sendto((U32*)buffer);
 		sended = true;
 		return 1;
 	}
 	void check(){
 		U16 status_reg = ETH_GetMACITStatusRegister(MDR_ETHERNET1);
-		if(status_reg & ETH_MAC_IT_RF_OK ) MDR_PORTD->RXTX ^= (1<<8);
+		
 		volatile U16 STAT = MDR_ETHERNET1->ETH_STAT;
 		bool RX_FULL = (bool)((STAT >> 4) & 1);
 		bool TX_EMPTY = (bool)((STAT >> 8) & 1);
@@ -77,6 +78,6 @@ public:
 	}
 };
 L2Transport* new_L2Transport(WaitSystem* waitSystem, L2Transport::Setup &setup) {
-  return new L2Transport_mdr32(waitSystem, setup);
+	return new L2Transport_mdr32(waitSystem, setup);
 }
 

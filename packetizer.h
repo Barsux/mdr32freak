@@ -6,6 +6,11 @@
 
 #define ETH_ALEN 6
 #define IPPROTO_UDP 17
+#define RTTHDR_LEN 8
+#define UDPHDR_LEN 8
+#define IPHDR_LEN 20
+#define ETHHDR_LEN 14
+
 
 class Packetizer{public:
     virtual ~Packetizer() {}

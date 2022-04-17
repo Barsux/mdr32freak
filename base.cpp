@@ -42,7 +42,7 @@ int utc2str(char* dst, int cbDstMax, U64 utc) {
   );
 }
 
-int str2ip4 (const char * dst, IP4 ip)
+int str2ip4 (const char * dst, IP4 &ip)
 {
     unsigned int byte0, byte1, byte2, byte3;
     char fakeString[2];
@@ -50,7 +50,7 @@ int str2ip4 (const char * dst, IP4 ip)
     {
         if ((byte3 < 256) && (byte2 < 256) && (byte1 < 256) && (byte0 < 256))
         {
-            ip  = (byte3 << 24) + (byte2 << 16) + (byte1 << 8) + byte0;
+            ip  = (byte0 << 24) + (byte1 << 16) + (byte2 << 8) + byte3;
             return 1;
         }
     }return 0;
@@ -99,6 +99,19 @@ int ip42str(char * dst, IP4 ip){
     return 1;
 }
 #endif
+
+int ip42str(char * dst, IP4 ipAddress)
+{
+    const int NBYTES = 4;
+    U8 octet[NBYTES];
+    char ipAddressFinal[16];
+    for(int i = 0 ; i < NBYTES ; i++)
+    {
+        octet[i] = ipAddress >> (i * 8);
+    }
+    sprintf(dst, "%d.%d.%d.%d", octet[0], octet[1], octet[2], octet[3]);
+	return 1;
+}
 
 bool str2mac(MAC &dst, char* src, int cbSrc) {
   memset(dst, 0, sizeof(dst)); if (cbSrc<0) cbSrc = strlen(src);

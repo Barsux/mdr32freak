@@ -78,10 +78,18 @@ public:
         memset(ready_packet, 0, 2048);
         total = sizeof(struct ethheader) + sizeof(struct ipheader) + sizeof(struct udpheader);
         flags = (Flags)(flags | evaluate_every_cycle);
+		
+		have_values = false;
+		packet.dstPORT = 5850;
+		packet.srcPORT = 5850;
+		packet.is_server = true;
+		setted = true; inited = true;
+		str2ip4(setup.ip4, packet.srcIP);
+		str2mac(packet.srcMAC, setup.srcMAC);
+		eth_init(packet.srcMAC);
     }
     void create_packet(){
         U8 buffer[packet.size + SPACER];
-		buffer[0] = packet.size;
         memset(buffer, 0, packet.size + SPACER);
         struct ethheader *eth = (struct ethheader *)(buffer + SPACER);
         for(int i = 0; i < ETH_ALEN; i++){
@@ -106,8 +114,8 @@ public:
         udp->dest = htons(packet.dstPORT);
         udp->check = 0;
 
-        udp->len = htons((packet.size- sizeof(struct ipheader) - sizeof(struct ethheader)));
-        iphdr->tot_len = htons(packet.size - sizeof(struct ethheader));
+        udp->len = htons(packet.size - ETHHDR_LEN - IPHDR_LEN);
+        iphdr->tot_len = htons(packet.size - ETHHDR_LEN);
         iphdr->check = IPCHECK((U2 *)iphdr, iphdr->ihl<<2);
         int i = SPACER + sizeof(ethheader) + sizeof(ipheader) + sizeof(udpheader) + sizeof(rttheader);
         for (i; i < packet.size; i++){
@@ -121,15 +129,13 @@ public:
 
 
     int send(int seq){
-        if(!have_ready_packet)create_packet();
         struct rttheader *rtt = (struct rttheader *)(ready_packet + SPACER + sizeof(struct ipheader) + sizeof(struct ethheader) + sizeof(struct udpheader));
         rtt->size = packet.size;
         rtt->sequence = seq;
         rtt->CRC = 0;
         rtt->CRC = CRC8(ready_packet + total, packet.size - total);
-		
-		U32 * size = (U32*)&packet.size; 
-        short status = l2_transport_tx->send(ready_packet, seq, size) ;
+		*(uint32_t *)&ready_packet[0] = packet.size; 
+        short status = l2_transport_tx->send((U32*)ready_packet);
         return status>=0? status: -1;
     }
 
@@ -144,13 +150,17 @@ public:
 			
         struct ethheader *eth = (struct ethheader *)(buffer);
         if(eth->h_proto != ip_proto) return -1;
-		if(memcmp(eth->h_dest, packet.srcMAC, 6) != 0) return -1;
 			
         struct ipheader *ip = (struct ipheader *) (buffer + sizeof(struct ethheader));
-        if(ip->protocol != IPPROTO_UDP || ip->daddr != packet.srcIP) return -1;
-			
+        if(ip->protocol != IPPROTO_UDP) return -1;
+
+
+		if(ip->daddr != packet.srcIP) return -1;
+		
         struct udpheader *uh = (struct udpheader *)(buffer +sizeof(ethheader) + sizeof(ipheader));
-        if(ntohs(uh->source) != 5850 || ntohs(uh->dest) != 5850) return -1;
+        if(uh->source == htons(5850) || uh->dest == htons(5850)) return -1;
+	
+		
 			
         struct rttheader *rtt = (struct rttheader *)(buffer + sizeof(ethheader) + sizeof(ipheader) + sizeof(udpheader));
         seq = rtt->sequence;
@@ -158,25 +168,20 @@ public:
         rtt->CRC = 0;
         U2 upCRC = CRC8(buffer + total, packet.size - total);
         if(!have_values && packet.is_server){
-					packet.size = rtt->size;
-          memcpy(packet.srcMAC, eth->h_dest, ETH_ALEN);
-          memcpy(packet.dstMAC, eth->h_source, ETH_ALEN);
-          packet.srcIP = ip->daddr;
-          packet.dstIP = ip->saddr;
+			have_values = true;
+			packet.size = rtt->size;
+			memcpy(packet.srcMAC, eth->h_dest, ETH_ALEN);
+			packet.dstIP = ip->saddr;
+			if(!have_ready_packet)create_packet();
         }
         if(inCRC == upCRC) return 1;
-				return -1;
+		else return -1;
+		
 }
    
-		void init(){
-			setted = true; inited = true;
-			MAC mac;
-			memset(mac, 0, 6);
-			str2mac(packet.srcMAC, setup.srcMAC);
-			str2ip4(setup.ip4, packet.srcIP);
-			eth_init(mac);
-		}
-		void check(){}
+	void init(){}
+	
+	void check(){}
 
     void evaluate(){
 		if(!inited) init();
@@ -203,7 +208,6 @@ public:
 			
 			//PACKET TX
 			else if(queue == tx){
-				PRINT("PTX PACK");
 				tx->clear();
             }
 		}

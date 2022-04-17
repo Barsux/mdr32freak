@@ -4,6 +4,7 @@
 #include "packetizer.h"
 
 #define SPACER 4
+#define PORT5850 55830
 #pragma pack(push, 1)
 struct ethheader{
     U8 h_dest[6];
