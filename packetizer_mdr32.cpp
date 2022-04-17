@@ -127,8 +127,8 @@ public:
         rtt->sequence = seq;
         rtt->CRC = 0;
         rtt->CRC = CRC8(ready_packet + total, packet.size - total);
-
-				U32 * size = (U32*)&packet.size; 
+		
+		U32 * size = (U32*)&packet.size; 
         short status = l2_transport_tx->send(ready_packet, seq, size) ;
         return status>=0? status: -1;
     }
@@ -139,12 +139,12 @@ public:
         U8 buffer[MAXSIZE];
 
         status = l2_transport_rx->recv(buffer, tstmp, MAXSIZE); 
-				if(status < 0) return -1;
+		if(status < 0) return -1;
         U16 ip_proto = htons(0x0800);
 			
         struct ethheader *eth = (struct ethheader *)(buffer);
         if(eth->h_proto != ip_proto) return -1;
-				if(memcmp(eth->h_dest, packet.srcMAC, 6) != 0) return -1;
+		if(memcmp(eth->h_dest, packet.srcMAC, 6) != 0) return -1;
 			
         struct ipheader *ip = (struct ipheader *) (buffer + sizeof(struct ethheader));
         if(ip->protocol != IPPROTO_UDP || ip->daddr != packet.srcIP) return -1;
@@ -179,7 +179,7 @@ public:
 		void check(){}
 
     void evaluate(){
-				if(!inited) init();
+		if(!inited) init();
         while (WaitSystem::Queue* queue = enum_ready_queues()){
 			//L2 TX
 			if(queue == l2_transport_tx){
@@ -202,9 +202,9 @@ public:
 			}
 			
 			//PACKET TX
-            else if(queue == tx){
-							tx->clear();
-              enable_wait(l2_transport_tx);
+			else if(queue == tx){
+				PRINT("PTX PACK");
+				tx->clear();
             }
 		}
 	}

@@ -3,10 +3,8 @@
 
 int eth_init(MAC &srcMAC){
 	ETH_ClockDeInit();
-	ETH_PHY_ClockConfig(ETH_PHY_CLOCK_SOURCE_HSE2, ETH_PHY_HCLKdiv1);
 	RST_CLK_PCLKcmd(RST_CLK_PCLK_DMA, ENABLE); // Dma here now, idk.
 	
-
 	RST_CLK_HSE2config(RST_CLK_HSE2_ON);
 	if(RST_CLK_HSE2status() == ERROR) return -1;
 	
@@ -23,7 +21,7 @@ int eth_init(MAC &srcMAC){
 	ETH_InitStruct.ETH_Transmitter_RST = SET;
 	ETH_InitStruct.ETH_Receiver_RST = SET;
 	
-	ETH_InitStruct.ETH_Buffer_Mode = ETH_BUFFER_MODE_LINEAR;
+	ETH_InitStruct.ETH_Buffer_Mode = ETH_BUFFER_MODE_AUTOMATIC_CHANGE_POINTERS;
 	ETH_InitStruct.ETH_Source_Addr_HASH_Filter = DISABLE;
 
 	ETH_InitStruct.ETH_MAC_Address[2] = ((int)srcMAC[0]<<8)| (int)srcMAC[1];
@@ -44,13 +42,15 @@ void sendto(U32 * packet, U32 * size){
 }
 
 U16 recvto(U32 * packet, TsNs * UTC_Recv){
-	PRINT("GETTING PACKET");
-	volatile ETH_StatusPacketReceptionTypeDef ETH_StatusPacketReceptionStruct;
+	ETH_StatusPacketReceptionTypeDef ETH_StatusPacketReceptionStruct;
 	if(MDR_ETHERNET1->ETH_R_Head != MDR_ETHERNET1->ETH_R_Tail) {
 		UTC_Recv->renew();
 		ETH_StatusPacketReceptionStruct.Status = ETH_ReceivedFrame(MDR_ETHERNET1, packet);
-		PRINT("ACCEPTED PACKET WITH SIZE %u", (U16)(MDR_ETHERNET1->ETH_R_Head - MDR_ETHERNET1->ETH_R_Tail)); 
-		return (U16)(MDR_ETHERNET1->ETH_R_Head - MDR_ETHERNET1->ETH_R_Tail);
+		PRINT("ACCEPTED PACKET WITH SIZE %u", ETH_StatusPacketReceptionStruct.Fields.Length); 
+		return ETH_StatusPacketReceptionStruct.Fields.Length;
+	}
+	else{
+		PRINT("FUCK");
 	}
 	return 0; 
 }

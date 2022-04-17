@@ -44,16 +44,16 @@ void uart_init(){
 }
 void sendchar(uint8_t c)
 {
-    while (MDR_UART1->FR & UART_FLAG_TXFF);
+	while (MDR_UART1->FR & UART_FLAG_TXFF);
 		MDR_UART1->DR = (uint8_t)c;
 }
 
 
 int sendstr(char * fmt, ...){
 	char buff[2048];
-  va_list va; va_start(va, fmt);
-  int n = vsnprintf(buff, (int)sizeof(buff)-2, fmt, va); buff[sizeof(buff)-1]=0;
-  va_end(va);
+	va_list va; va_start(va, fmt);
+	int n = vsnprintf(buff, (int)sizeof(buff)-2, fmt, va); buff[sizeof(buff)-1]=0;
+	va_end(va);
 	for(int i = 0; i < n; i++) {
 		sendchar(buff[i]);
 	}

@@ -52,13 +52,14 @@ public:
 		return 1;
 	}
 	void check(){
+		U16 status_reg = ETH_GetMACITStatusRegister(MDR_ETHERNET1);
+		if(status_reg & ETH_MAC_IT_RF_OK ) MDR_PORTD->RXTX ^= (1<<8);
 		volatile U16 STAT = MDR_ETHERNET1->ETH_STAT;
-		bool RX_EMPTY = (bool)((STAT >> 0) & 1);
+		bool RX_FULL = (bool)((STAT >> 4) & 1);
 		bool TX_EMPTY = (bool)((STAT >> 8) & 1);
-		if(!RX_EMPTY){
-			MDR_PORTD->RXTX ^= (1<<8);
-			RX_EMPTY = !RX_EMPTY;
+		if(MDR_ETHERNET1->ETH_R_Head != MDR_ETHERNET1->ETH_R_Tail){
 			rx->setReady();
+			RX_FULL = !RX_FULL;
 		}
 		if(!TX_EMPTY){
 			TX_EMPTY = !TX_EMPTY;
