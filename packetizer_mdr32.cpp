@@ -9,14 +9,12 @@ public:
     bool have_ready_packet;
     bool setted;
     bool have_values;
-		bool inited;
-		U32 ip4;
+	bool inited;
 		
     I4 total;
-    L2Transport::Queue_rx*     l2_transport_rx;
-    L2Transport::Queue_tx*     l2_transport_tx;
-    L2Transport::Queue_sent*  l2_transport_sent;
-
+    L2Transport::Queue_rx*		l2_transport_rx;
+    L2Transport::Queue_tx*		l2_transport_tx;
+    L2Transport::Queue_sent*	l2_transport_sent;
 
     class Rx: public Queue_prx {public:
         PacketizerObject &base;
@@ -24,19 +22,19 @@ public:
         int recv(int &seq, TsNs * tstmp){
             return base.recv(seq, tstmp);
         }
-    } prx;
+    }prx;
     class Tx: public Queue_ptx {public:
         PacketizerObject &base;
         Tx(PacketizerObject &base): base(base){}
         int send(int seq){
             return base.send(seq);
         }
-    } ptx;
+    }ptx;
     class Sent: public Queue_psent {public:
         PacketizerObject &base;
         Sent(PacketizerObject &base): base(base){}
 
-    } psent;
+    }psent;
 
     U2 IPCHECK(U2 *addr, U4 count) {
         register U32 sum = 0;
@@ -68,9 +66,9 @@ public:
 
 
     PacketizerObject(WaitSystem* waitSystem, Packetizer::Setup &setup): WaitSystem::Module(waitSystem)
-            , setup(setup), setted(false), inited(false), have_values(false), prx(*this), ptx(*this), psent(*this)
+            , setup(setup), setted(false), inited(false), have_values(false), prx(*this), ptx(*this), psent(*this), l2_transport_rx(), l2_transport_tx(), l2_transport_sent()
     {
-				awaited = false;
+		awaited=false;
         module_debug = "PACKETIZER";
         rx = &prx;
         tx = &ptx;
@@ -80,11 +78,10 @@ public:
         memset(ready_packet, 0, 2048);
         total = sizeof(struct ethheader) + sizeof(struct ipheader) + sizeof(struct udpheader);
         flags = (Flags)(flags | evaluate_every_cycle);
-				str2ip4(setup.ip4, ip4);
     }
     void create_packet(){
         U8 buffer[packet.size + SPACER];
-				buffer[0] = packet.size;
+		buffer[0] = packet.size;
         memset(buffer, 0, packet.size + SPACER);
         struct ethheader *eth = (struct ethheader *)(buffer + SPACER);
         for(int i = 0; i < ETH_ALEN; i++){
@@ -140,19 +137,17 @@ public:
         int MAXSIZE = 2048;
         int status;
         U8 buffer[MAXSIZE];
-        bool valid_buffer = false;
 
         status = l2_transport_rx->recv(buffer, tstmp, MAXSIZE); 
 				if(status < 0) return -1;
         U16 ip_proto = htons(0x0800);
-			
 			
         struct ethheader *eth = (struct ethheader *)(buffer);
         if(eth->h_proto != ip_proto) return -1;
 				if(memcmp(eth->h_dest, packet.srcMAC, 6) != 0) return -1;
 			
         struct ipheader *ip = (struct ipheader *) (buffer + sizeof(struct ethheader));
-        if(ip->protocol != IPPROTO_UDP || ip->daddr != ip4) return -1;
+        if(ip->protocol != IPPROTO_UDP || ip->daddr != packet.srcIP) return -1;
 			
         struct udpheader *uh = (struct udpheader *)(buffer +sizeof(ethheader) + sizeof(ipheader));
         if(ntohs(uh->source) != 5850 || ntohs(uh->dest) != 5850) return -1;
@@ -174,7 +169,7 @@ public:
 }
    
 		void init(){
-			setted = true;
+			setted = true; inited = true;
 			MAC mac;
 			memset(mac, 0, 6);
 			str2mac(packet.srcMAC, setup.srcMAC);
@@ -184,32 +179,35 @@ public:
 		void check(){}
 
     void evaluate(){
-				if(inited) init();
+				if(!inited) init();
         while (WaitSystem::Queue* queue = enum_ready_queues()){
-            if(queue == l2_transport_tx && setted){
-                tx->setReady();
+			//L2 TX
+			if(queue == l2_transport_tx){
+				l2_transport_tx->clear();
+				tx->setReady();
+			}
+			
+			//L2 RX
+            else if(queue == l2_transport_rx){
+				l2_transport_rx->clear();
+				rx->setReady();
             }
-            else if(queue == l2_transport_rx && setted){
-								PRINT("RX_READY");
-                rx->setReady();
-            }
-            else if(queue == rx && !setted){
-                packet = rx->packet;
-                rx->clear();
-                setted = true;
-            }
-            else if(queue == tx){
-                //enable_wait(l2_transport_tx);
-							PRINT("TX WORKS!");
-            }
+			
+			//L2 SENT
             else if(queue == l2_transport_sent){
-                l2_transport_sent->clear();
-                sent->utc_sent = l2_transport_sent->utc_sent;
-                sent->sequence = l2_transport_sent->sequence;
-                sent->setReady();
+				l2_transport_sent->clear();
+				sent->utc_sent = l2_transport_sent->utc_sent;
+				sent->sequence = l2_transport_sent->sequence;
+				sent->setReady();
+			}
+			
+			//PACKET TX
+            else if(queue == tx){
+							tx->clear();
+              enable_wait(l2_transport_tx);
             }
-        }
-    }
+		}
+	}
 };
 Packetizer* new_Packetizer(WaitSystem* waitSystem, Packetizer::Setup &setup){
     return new PacketizerObject(waitSystem, setup);

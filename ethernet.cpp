@@ -2,7 +2,6 @@
 #define PRINT(...) sendstr(__VA_ARGS__)
 
 int eth_init(MAC &srcMAC){
-	PRINT("INIT2");
 	ETH_ClockDeInit();
 	ETH_PHY_ClockConfig(ETH_PHY_CLOCK_SOURCE_HSE2, ETH_PHY_HCLKdiv1);
 	RST_CLK_PCLKcmd(RST_CLK_PCLK_DMA, ENABLE); // Dma here now, idk.
@@ -36,8 +35,8 @@ int eth_init(MAC &srcMAC){
 	ETH_Init(MDR_ETHERNET1, (ETH_InitTypeDef *) &ETH_InitStruct);
 	ETH_PHYCmd(MDR_ETHERNET1, ENABLE);
 	ETH_Start(MDR_ETHERNET1);
-	return 1;
 	PRINT("ETH INIT");
+	return 1;
 }
 
 void sendto(U32 * packet, U32 * size){
