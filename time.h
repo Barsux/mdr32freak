@@ -21,7 +21,9 @@ void check_overloading();
 class TsNs{
 	public:
 		TsNs();
+		TsNs(uint64_t ticks);
 		uint32_t high, low;
+		uint16_t divider;
 	
 		//Записывает в объект класса новое значение времени в машинных тактах
 		void renew();

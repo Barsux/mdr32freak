@@ -1,6 +1,7 @@
 #include "time.h"
 U32 global_high = 0;
 U32 cntstamp = 0;
+U16 divider = SystemCoreClock / 1000000;
 
 void time_init(){
 	TIMER_CntInitTypeDef timer_struct;
@@ -33,7 +34,7 @@ void check_overloading(){
 
 
 void set_utc(U64 time){
-	time /= (1000000000 / SystemCoreClock);
+	time *= divider;
 	global_high = (U32)(time >> 32);
 	MDR_TIMER1->CNT = (volatile uint32_t)time;
 }
@@ -44,6 +45,12 @@ TsNs::TsNs(){
 	low = MDR_TIMER1->CNT;
 }
 
+TsNs::TsNs(U64 ticks){
+	check_overloading();
+	high = (U32)(ticks >> 32);
+	low = (U32)(ticks);
+}
+
 void TsNs::renew(){
 	check_overloading();
 	high = global_high;
@@ -51,7 +58,12 @@ void TsNs::renew(){
 }
 
 U64 TsNs::toUTC(){
-	return (((uint64_t)high << 32) | ((uint64_t)low)) * 1000000000 / SystemCoreClock;
+	/*
+	U64 UTE = (((uint64_t)high << 32) | ((uint64_t)low));
+	PRINT("%llu", UTE);
+	PRINT("%lu", SystemCoreClock);
+	*/
+	return (((uint64_t)high << 32) | ((uint64_t)low)) / divider;
 }
 
 U64 TsNs::toU64(){
@@ -60,11 +72,11 @@ U64 TsNs::toU64(){
 
 U64 TsNs::operator - (TsNs ts2){
 	U64 time = ((uint64_t)(this->high - ts2.high) << 32) + this->low - ts2.low;
-	return time * 1000000000 / SystemCoreClock;
+	return time / divider;
 }
 		
 U64 TsNs::operator + (TsNs ts2){
-	return (((U64)(this->high + ts2.high)<<32)|((U64)(this->low + ts2.low))) * 1000000000 / SystemCoreClock;
+	return (((U64)(this->high + ts2.high)<<32)|((U64)(this->low + ts2.low))) / divider;
 }
 		
 bool TsNs::operator == (TsNs ts2){

@@ -11,7 +11,7 @@ public:
 		L2Transport_mdr32 &base;
 		Rx(L2Transport_mdr32 &base): base(base) {
     }
-		int recv(void * dst, TsNs * utc_rx , int maxsize) {
+		int recv(void * dst, TsNs &utc_rx , int maxsize) {
 			return base.recv(dst, utc_rx, maxsize);
 		}
 	}queue_rx;
@@ -33,9 +33,6 @@ public:
 		rx = &queue_rx; sent = &queue_sent;
 		tx = &queue_tx; enable_wait(tx);
 		flags = (Flags)(flags | evaluate_every_cycle);
-	}
-	
-	void inits(){
 		MAC mac;
 		memset(mac, 0, 6);
 		str2mac(mac, setup.srcMAC);
@@ -43,7 +40,11 @@ public:
 		inited = true;
 	}
 	
-	int recv(void * dst, TsNs * utc_rx, int maxsize){
+	void inits(){
+		
+	}
+	
+	int recv(void * dst, TsNs &utc_rx, int maxsize){
 		return recvto((U32*)dst, utc_rx);
 	}
 	
@@ -52,18 +53,15 @@ public:
 		sended = true;
 		return 1;
 	}
-	void check(){
-		U16 status_reg = ETH_GetMACITStatusRegister(MDR_ETHERNET1);
-		
+	void check(){		
 		volatile U16 STAT = MDR_ETHERNET1->ETH_STAT;
-		bool RX_FULL = (bool)((STAT >> 4) & 1);
-		bool TX_EMPTY = (bool)((STAT >> 8) & 1);
-		if(MDR_ETHERNET1->ETH_R_Head != MDR_ETHERNET1->ETH_R_Tail){
+		//bool TX_EMPTY = (bool)((STAT >> 8) & 1);
+		//U2 ARRIVED_PACKETS = (STAT >> 5) & 7;
+		if((STAT >> 5) & 1){ //5-7 биты указывают количество принятых, необработанных пакетов, в нашем случае не больше одного
+			MDR_PORTD->RXTX ^= (1<<8);
 			rx->setReady();
-			RX_FULL = !RX_FULL;
 		}
-		if(!TX_EMPTY){
-			TX_EMPTY = !TX_EMPTY;
+		if((STAT >> 8) & 1){  //8-й бит указывает пуст ли буффер передатчика 1-да 0-нет
 			if(sended){
 				sended = false;
 				sent->utc_sent = TsNs();

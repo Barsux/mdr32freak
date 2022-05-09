@@ -75,6 +75,11 @@ struct rttheader {
     U32 sequence;
 };
 
+struct timeheader{
+	U64 timestamp;
+	U32 clock;
+};
+
 #pragma pack(pop)
 
 

@@ -1,6 +1,8 @@
 #ifndef baseH
 #define baseH
 #define __MDR32F9Qx__ 1
+#define LOOPB 1
+
 
 #include "stdio.h"
 #include "stdlib.h"
@@ -93,7 +95,7 @@ void stdout_printf(char* fmt, ...);
 void print(char* fmt, ...);
 
 int str2int(int &dst, char * src);
-int str2ip4(const char * dst, IP4 &ip);
+int str2ip4(IP4 &dst, const char * src);
 int ip42str(char * dst, IP4 ip);
 int utc2str(char* dst, int cbDstMax, U64 utc);
 int mac2str(char* dst, MAC mac);

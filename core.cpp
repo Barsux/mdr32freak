@@ -6,6 +6,7 @@ class CoreObject: public WaitSystem::Module, public Core {public:
 	Packetizer::Queue_ptx*		packetizer_tx;
 	Packetizer::Queue_psent*    packetizer_sent;
 	volatile U16 counter = 0;
+	U16 pointer = 0;
 	volatile I4 seq;
 	bool can_send = false;
 	CoreObject(WaitSystem* waitSystem, Core::Setup &setup): WaitSystem::Module(waitSystem)
@@ -25,11 +26,19 @@ class CoreObject: public WaitSystem::Module, public Core {public:
 		enable_wait(packetizer_rx);
 		enable_wait(packetizer_tx);
 		enable_wait(packetizer_sent);
+		counter = 200;
 	}
 	void init(){}
 	void check(){}
 	void evaluate() {
+		/*
+		PRINT("Attempt to send an a packet with loopback");
+		if(pointer <= counter){
+			
+			packetizer_tx->send(pointer++);
+		}*/
 		while (WaitSystem::Queue* queue = enum_ready_queues()){
+			
 			if(queue == packetizer_tx) {
 				packetizer_tx->clear();
 				can_send = true;
@@ -38,11 +47,11 @@ class CoreObject: public WaitSystem::Module, public Core {public:
 				packetizer_rx->clear();
 				
 				TsNs UTC = TsNs();
-				I4 sequence; TsNs * ts = &UTC;
-				I2 r = packetizer_rx->recv(sequence, ts);
+				I4 sequence;
+				I2 r = packetizer_rx->recv_rtt(sequence, UTC);
 				if(r > 0){
 					seq = sequence;
-					packetizer_tx->send(sequence);
+					packetizer_tx->send_rtt(sequence);
 				}
 			}
 		}

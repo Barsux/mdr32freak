@@ -10,7 +10,7 @@ class L2Transport {public:
 	Setup(): srcMAC() {}
 	};
 	class Queue_rx: public WaitSystem::Queue {public:
-		virtual int recv(void * dst, TsNs * utc_rx , int maxsize) = 0;
+		virtual int recv(void * dst, TsNs &utc_rx , int maxsize) = 0;
 	}* rx;
 	class Queue_tx: public WaitSystem::Queue {public:
 		virtual int send(U32 * buffer) = 0;

@@ -42,15 +42,15 @@ int utc2str(char* dst, int cbDstMax, U64 utc) {
   );
 }
 
-int str2ip4 (const char * dst, IP4 &ip)
+int str2ip4 (IP4 &dst, const char * src)
 {
     unsigned int byte0, byte1, byte2, byte3;
     char fakeString[2];
-    if (sscanf(dst, "%u.%u.%u.%u%1s", &byte3, &byte2, &byte1, &byte0, fakeString) == 4)
+    if (sscanf(src, "%u.%u.%u.%u%1s", &byte3, &byte2, &byte1, &byte0, fakeString) == 4)
     {
         if ((byte3 < 256) && (byte2 < 256) && (byte1 < 256) && (byte0 < 256))
         {
-            ip  = (byte0 << 24) + (byte1 << 16) + (byte2 << 8) + byte3;
+            dst  = (byte0 << 24) + (byte1 << 16) + (byte2 << 8) + byte3;
             return 1;
         }
     }return 0;
@@ -171,15 +171,15 @@ void WaitSystem::Module::print(char* fmt, ...) {
 }
 
 U64 nanotime() {
-  #ifdef __linux__
-  timespec ts; clock_gettime(CLOCK_REALTIME, &ts);
-  return U64(ts.tv_sec)*1000000000ULL + U64(ts.tv_nsec);
+	#ifdef __linux__
+	timespec ts; clock_gettime(CLOCK_REALTIME, &ts);
+	return U64(ts.tv_sec)*1000000000ULL + U64(ts.tv_nsec);
 	#elif __MDR32F9Qx__
 	return TsNs().toU64();
-  #else
-  U64 time[2]; GetSystemTimeAsFileTime((FILETIME*)(&time[0]));
-  return U64((time[0])*100ULL - 11644473600000000000ULL);
-  #endif
+	#else
+	U64 time[2]; GetSystemTimeAsFileTime((FILETIME*)(&time[0]));
+	return U64((time[0])*100ULL - 11644473600000000000ULL);
+	#endif
 }
 
 class WaitSystemCore: public WaitSystem {

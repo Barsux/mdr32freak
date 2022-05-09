@@ -20,10 +20,13 @@ int eth_init(MAC &srcMAC){
 	ETH_InitStruct.ETH_PHY_Mode = ETH_PHY_MODE_AutoNegotiation;
 	ETH_InitStruct.ETH_Transmitter_RST = SET;
 	ETH_InitStruct.ETH_Receiver_RST = SET;
-	
+	ETH_InitStruct.ETH_Automatic_Preamble = ENABLE;
+	ETH_InitStruct.ETH_Automatic_CRC_Strip = ENABLE;
 	ETH_InitStruct.ETH_Buffer_Mode = ETH_BUFFER_MODE_AUTOMATIC_CHANGE_POINTERS;
-	ETH_InitStruct.ETH_Source_Addr_HASH_Filter = DISABLE;
-
+	ETH_InitStruct.ETH_Receive_All_Packets = ENABLE;                                                         
+    ETH_InitStruct.ETH_Source_Addr_HASH_Filter = DISABLE;
+	//ETH_InitStruct.ETH_Loopback_Mode = ENABLE;
+	
 	ETH_InitStruct.ETH_MAC_Address[2] = ((int)srcMAC[0]<<8)| (int)srcMAC[1];
 	ETH_InitStruct.ETH_MAC_Address[1] = ((int)srcMAC[2]<<8)| (int)srcMAC[3];
 	ETH_InitStruct.ETH_MAC_Address[0] = ((int)srcMAC[4]<<8)| (int)srcMAC[5];
@@ -41,11 +44,11 @@ void sendto(U32 * packet){
 	ETH_SendFrame(MDR_ETHERNET1, (U32 *) packet, *(U32*)&packet[0]);
 }
 
-U16 recvto(U32 * packet, TsNs * UTC_Recv){
+U16 recvto(U32 * packet, TsNs &UTC_Recv){
 	ETH_StatusPacketReceptionTypeDef ETH_StatusPacketReceptionStruct;
 	
 	if(MDR_ETHERNET1->ETH_R_Head != MDR_ETHERNET1->ETH_R_Tail) {
-		UTC_Recv->renew();
+		UTC_Recv.renew();
 		ETH_StatusPacketReceptionStruct.Status = ETH_ReceivedFrame(MDR_ETHERNET1, packet);
 		return ETH_StatusPacketReceptionStruct.Fields.Length;
 	}

@@ -5,6 +5,13 @@
 #include "packetizer.h"
 #include "l2_transport.h"
 
+struct OTT{
+	U16 seq;
+	TsNs out_ts;
+	TsNs inc_ts;
+	
+};
+
 class Core {public:
 	virtual ~Core() {}
 	class Setup {public:

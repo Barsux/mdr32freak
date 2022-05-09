@@ -21,10 +21,12 @@ class Packetizer{public:
 		};
     class Queue_prx: public WaitSystem::Queue {public:
         struct pckt packet;
-        virtual int recv(int &seq, TsNs * tstmp) = 0;
+        virtual int recv_rtt(int &seq, TsNs &tstmp) = 0;
+		virtual int recv_ott(int &seq, TsNs &tstmp) = 0;
     }* rx;
     class Queue_ptx: public WaitSystem::Queue {public:
-        virtual int send(int seq) = 0;
+        virtual int send_rtt(int seq) = 0;
+		virtual int send_ott(int seq, TsNs &send_ts) = 0;
     }* tx;
     class Queue_psent: public WaitSystem::Queue {public:
         TsNs utc_sent;

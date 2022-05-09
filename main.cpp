@@ -2,7 +2,7 @@
 #include "core.h"
 #include "l2_transport_mdr32.h"
 #include "packetizer_mdr32.h"
-
+#include "uart_mdr32.h"
 
 #pragma argsused
 
@@ -33,19 +33,22 @@ void cpu_init()
 
 
 void init(){
+	//EN - D14                  PPS - D15
 	//Разрешить работу PORTC PORTB и UART1, 2
 	MDR_RST_CLK->PER_CLOCK 	|= (1 << 6) | (1 << 23) | (1 << 24);
 	//Выбрать цифровой тип порта
-	MDR_PORTD->ANALOG 		|= ((1<<7) | (1<<8));
+	MDR_PORTD->ANALOG 		|= ((1<<7) | (1<<8) | (1<<15));
+	MDR_PORTC->ANALOG 		|= (1<<6);
 	//Выбрать вывод
-	MDR_PORTD->OE 			|= ((1<<7) | (1<<8));
+	MDR_PORTC->OE 			|= (1<<6);
+	MDR_PORTD->OE 			|= ((1<<7) | (1<<8) | (0<<15));
 	//Разрешить питание
-	MDR_PORTD->PWR 			|= (0x1 << PORT_PWR7_Pos);
-	MDR_PORTD->PWR 			|= (0x1 << PORT_PWR8_Pos);
+	MDR_PORTD->PWR 			|= ((0x1 << PORT_PWR7_Pos) | (0x1 << PORT_PWR8_Pos));
+	MDR_PORTC->PWR			|= (0x1 << PORT_PWR6_Pos);
 	cpu_init();
 	uart_init();
-	MDR_PORTD->RXTX 		|= (1<<8);
-	MDR_PORTD->RXTX 		|= (1<<7);
+	MDR_PORTC->RXTX 		|= (1<<6);
+	MDR_PORTD->RXTX 		|= ((1<<7) | (1<<8));
 }
 #else
 void init(){}
@@ -54,7 +57,7 @@ void init(){}
 
 int main()
 {
-	char source_mac[] = "43:A8:A7:B4:13:42";
+	char source_mac[] = "72:27:72:AA:BB:CC";
 	char source_ip[] = "192.168.1.12";
 	init();
 	PRINT("INIT");
@@ -65,7 +68,9 @@ int main()
 	L2Transport::Setup l2Transport_setup;
 	l2Transport_setup.srcMAC = source_mac;
 	L2Transport* l2Transport = new_L2Transport(waitSystem, l2Transport_setup);
-
+	
+	UART* UART_mdr32 = new_UART(waitSystem);
+	
 	Packetizer::Setup packetizer_setup;
 	packetizer_setup.srcMAC = source_mac;
 	packetizer_setup.ip4 = source_ip;
