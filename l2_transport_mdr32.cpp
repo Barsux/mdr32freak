@@ -61,7 +61,8 @@ public:
 			rx->setReady();
 		}
 		//8-й бит указывает пуст ли буффер передатчика 1-да 0-нет
-		if((STAT >> 8) & 1){  
+		if((STAT >> 8) & 1){
+			MDR_PORTD->RXTX ^= (1<<7);
 			if(sended){
 				sended = false;
 				sent->utc_sent = TsNs();
