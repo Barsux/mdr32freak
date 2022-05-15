@@ -79,12 +79,10 @@ public:
 		
 	}
 	void check(){
-		/*
-		if(wait_pps && (MDR_PORTD->RXTX & (1<<15))) {
+		if((MDR_PORTD->RXTX & (1<<15))) {
 			PRINT("PPS");
 			MDR_PORTD->RXTX ^= (1<<8);
 		}
-		*/
 		if(MDR_UART2->FR & UART_FLAG_RXFF && MDR_UART1->FR & UART_FLAG_TXFE){
 			volatile U8 data = (U8)MDR_UART2->DR;
 			MDR_UART1->DR = data;
